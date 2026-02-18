@@ -7,6 +7,10 @@ class ChatApp {
         this.sendButton = document.getElementById('sendButton');
         this.clearChatBtn = document.getElementById('clearChat');
         this.exportChatBtn = document.getElementById('exportChat');
+        this.themeToggleBtn = document.getElementById('themeToggle');
+        this.fontSizeSelect = document.getElementById('fontSizeSelect');
+        this.fontSizeActive = document.getElementById('fontSizeActive');
+        this.promptTemplates = document.getElementById('promptTemplates');
         this.loadingOverlay = document.getElementById('loadingOverlay');
         this.statusText = document.getElementById('statusText');
         this.statusDot = document.getElementById('statusDot');
@@ -14,6 +18,9 @@ class ChatApp {
         
         this.conversationHistory = [];
         this.maxCharacters = 2000;
+        this.themeStorageKey = 'chatTheme';
+        this.fontSizeStorageKey = 'chatFontSize';
+        this.templateStorageKey = 'chatLastTemplate';
         
         this.init();
     }
@@ -21,10 +28,16 @@ class ChatApp {
     init() {
         // Event Listeners
         this.chatForm.addEventListener('submit', (e) => this.handleSubmit(e));
+        this.chatMessages.addEventListener('click', (e) => this.handleMessageActionClick(e));
+        this.promptTemplates.addEventListener('click', (e) => this.handleTemplateClick(e));
         this.clearChatBtn.addEventListener('click', () => this.clearChat());
         this.exportChatBtn.addEventListener('click', () => this.exportChat());
+        this.themeToggleBtn.addEventListener('click', () => this.toggleTheme());
+        this.fontSizeSelect.addEventListener('change', (e) => this.handleFontSizeChange(e));
         this.messageInput.addEventListener('input', () => this.updateCharCount());
         this.messageInput.addEventListener('keydown', (e) => this.handleKeyDown(e));
+
+        this.loadPreferences();
         
         // Auto-resize textarea
         this.messageInput.addEventListener('input', () => this.autoResizeTextarea());
@@ -34,6 +47,75 @@ class ChatApp {
         
         // Check API configuration
         this.checkAPIConfiguration();
+    }
+
+    loadPreferences() {
+        const savedTheme = localStorage.getItem(this.themeStorageKey) || 'light';
+        const savedFontSize = localStorage.getItem(this.fontSizeStorageKey) || 'medium';
+        const savedTemplate = localStorage.getItem(this.templateStorageKey) || '';
+
+        this.applyTheme(savedTheme);
+        this.applyFontSize(savedFontSize);
+        this.applyTemplateActiveState(savedTemplate);
+    }
+
+    toggleTheme() {
+        const currentTheme = document.body.dataset.theme || 'light';
+        const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        this.applyTheme(nextTheme);
+    }
+
+    applyTheme(theme) {
+        document.body.dataset.theme = theme;
+        this.themeToggleBtn.textContent = theme === 'dark' ? 'Light Mode' : 'Dark Mode';
+        localStorage.setItem(this.themeStorageKey, theme);
+    }
+
+    handleFontSizeChange(e) {
+        this.applyFontSize(e.target.value);
+    }
+
+    applyFontSize(size) {
+        const fontSizes = {
+            small: '0.9rem',
+            medium: '1rem',
+            large: '1.1rem'
+        };
+        const fontSizeLabels = {
+            small: 'Small',
+            medium: 'Medium',
+            large: 'Large'
+        };
+        const selectedSize = fontSizes[size] ? size : 'medium';
+
+        document.documentElement.style.setProperty('--chat-font-size', fontSizes[selectedSize]);
+        this.fontSizeSelect.value = selectedSize;
+        this.fontSizeActive.textContent = fontSizeLabels[selectedSize];
+        localStorage.setItem(this.fontSizeStorageKey, selectedSize);
+    }
+
+    handleTemplateClick(e) {
+        const templateButton = e.target.closest('.template-button');
+        if (!templateButton) return;
+
+        const template = templateButton.dataset.template || '';
+        if (!template) return;
+
+        const currentText = this.messageInput.value.trim();
+        this.messageInput.value = currentText ? `${currentText}\n${template}` : template;
+        localStorage.setItem(this.templateStorageKey, template);
+        this.applyTemplateActiveState(template);
+        this.messageInput.focus();
+        this.updateCharCount();
+        this.autoResizeTextarea();
+    }
+
+    applyTemplateActiveState(selectedTemplate) {
+        const templateButtons = this.promptTemplates.querySelectorAll('.template-button');
+        templateButtons.forEach((button) => {
+            const isActive = button.dataset.template === selectedTemplate;
+            button.classList.toggle('is-active', isActive);
+        });
     }
 
     checkAPIConfiguration() {
@@ -56,8 +138,14 @@ class ChatApp {
         const message = this.messageInput.value.trim();
         if (!message) return;
 
+        this.conversationHistory.push({
+            role: 'user',
+            content: message
+        });
+        const userHistoryIndex = this.conversationHistory.length - 1;
+
         // Add user message
-        this.addMessage('user', message);
+        this.addMessage('user', message, false, userHistoryIndex);
         this.messageInput.value = '';
         this.updateCharCount();
         this.autoResizeTextarea();
@@ -68,8 +156,12 @@ class ChatApp {
 
         try {
             // Call AI API
-            const response = await this.callAI(message);
-            this.addMessage('assistant', response);
+            const response = await this.callAI();
+            this.conversationHistory.push({
+                role: 'assistant',
+                content: response
+            });
+            this.addMessage('assistant', response, false, this.conversationHistory.length - 1);
             this.updateStatus('ready', 'Ready');
         } catch (error) {
             console.error('Error:', error);
@@ -83,13 +175,7 @@ class ChatApp {
         this.saveConversation();
     }
 
-    async callAI(message) {
-        // Add message to conversation history
-        this.conversationHistory.push({
-            role: 'user',
-            content: message
-        });
-
+    async callAI() {
         // Check API configuration
         if (!CONFIG.API_KEY || CONFIG.API_KEY === 'your-api-key-here') {
             throw new Error('API key not configured. Please add your API key to the .env file.');
@@ -128,25 +214,18 @@ class ChatApp {
             }
 
             const data = await response.json();
-            const assistantMessage = data.candidates[0].content.parts[0].text;
-
-            // Add assistant response to conversation history
-            this.conversationHistory.push({
-                role: 'assistant',
-                content: assistantMessage
-            });
-
-            return assistantMessage;
+            return data.candidates[0].content.parts[0].text;
         } catch (error) {
-            // Remove the user message from history if the API call fails
-            this.conversationHistory.pop();
             throw error;
         }
     }
 
-    addMessage(type, text, isError = false) {
+    addMessage(type, text, isError = false, historyIndex = null) {
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${isError ? 'error' : type}`;
+        if (Number.isInteger(historyIndex)) {
+            messageDiv.dataset.historyIndex = historyIndex.toString();
+        }
         
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
@@ -158,12 +237,170 @@ class ChatApp {
         const timeSpan = document.createElement('span');
         timeSpan.className = 'message-time';
         timeSpan.textContent = this.formatTime(new Date());
+
+        if (!isError && (type === 'user' || type === 'assistant')) {
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'message-actions';
+
+            const copyBtn = document.createElement('button');
+            copyBtn.type = 'button';
+            copyBtn.className = 'message-action-btn';
+            copyBtn.dataset.action = 'copy';
+            copyBtn.textContent = 'Copy';
+            actionsDiv.appendChild(copyBtn);
+
+            if (type === 'user') {
+                const editBtn = document.createElement('button');
+                editBtn.type = 'button';
+                editBtn.className = 'message-action-btn';
+                editBtn.dataset.action = 'edit';
+                editBtn.textContent = 'Edit';
+                actionsDiv.appendChild(editBtn);
+            }
+
+            if (type === 'assistant') {
+                const regenerateBtn = document.createElement('button');
+                regenerateBtn.type = 'button';
+                regenerateBtn.className = 'message-action-btn';
+                regenerateBtn.dataset.action = 'regenerate';
+                regenerateBtn.textContent = 'Regenerate';
+                actionsDiv.appendChild(regenerateBtn);
+            }
+
+            messageDiv.appendChild(actionsDiv);
+        }
         
         messageDiv.appendChild(contentDiv);
         messageDiv.appendChild(timeSpan);
         
         this.chatMessages.appendChild(messageDiv);
         this.scrollToBottom();
+    }
+
+    async handleMessageActionClick(e) {
+        const actionButton = e.target.closest('.message-action-btn');
+        if (!actionButton) return;
+
+        const messageDiv = actionButton.closest('.message');
+        if (!messageDiv) return;
+
+        const action = actionButton.dataset.action;
+        const textElement = messageDiv.querySelector('.message-content p');
+        const historyIndex = parseInt(messageDiv.dataset.historyIndex || '-1', 10);
+        const messageText = textElement ? textElement.textContent : '';
+
+        if (action === 'copy') {
+            await this.copyText(messageText, actionButton);
+            return;
+        }
+
+        if (action === 'edit') {
+            this.messageInput.value = messageText;
+            this.updateCharCount();
+            this.autoResizeTextarea();
+            this.messageInput.focus();
+            return;
+        }
+
+        if (action === 'regenerate') {
+            await this.regenerateResponse(historyIndex);
+        }
+    }
+
+    async copyText(text, button = null) {
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(text);
+            } else {
+                const tempTextarea = document.createElement('textarea');
+                tempTextarea.value = text;
+                document.body.appendChild(tempTextarea);
+                tempTextarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempTextarea);
+            }
+            this.showActionButtonFeedback(button, 'Copied!', 'success');
+            this.updateStatus('ready', 'Message copied');
+        } catch (error) {
+            console.error('Error copying message:', error);
+            this.showActionButtonFeedback(button, 'Failed', 'error');
+            this.updateStatus('error', 'Copy failed');
+        }
+    }
+
+    showActionButtonFeedback(button, text, state) {
+        if (!button) return;
+
+        if (!button.dataset.defaultText) {
+            button.dataset.defaultText = button.textContent;
+        }
+
+        button.textContent = text;
+        button.classList.remove('is-success', 'is-error');
+
+        if (state === 'success') {
+            button.classList.add('is-success');
+        }
+
+        if (state === 'error') {
+            button.classList.add('is-error');
+        }
+
+        if (button._resetTimer) {
+            clearTimeout(button._resetTimer);
+        }
+
+        button._resetTimer = setTimeout(() => {
+            button.textContent = button.dataset.defaultText;
+            button.classList.remove('is-success', 'is-error');
+            button._resetTimer = null;
+        }, 1200);
+    }
+
+    async regenerateResponse(assistantHistoryIndex) {
+        if (!Number.isInteger(assistantHistoryIndex) || assistantHistoryIndex < 0) return;
+        if (this.loadingOverlay.classList.contains('active')) return;
+        if (this.conversationHistory[assistantHistoryIndex]?.role !== 'assistant') return;
+
+        let userHistoryIndex = -1;
+        for (let index = assistantHistoryIndex - 1; index >= 0; index--) {
+            if (this.conversationHistory[index].role === 'user') {
+                userHistoryIndex = index;
+                break;
+            }
+        }
+
+        if (userHistoryIndex < 0) return;
+
+        this.conversationHistory = this.conversationHistory.slice(0, userHistoryIndex + 1);
+
+        const messages = this.chatMessages.querySelectorAll('.message[data-history-index]');
+        messages.forEach((message) => {
+            const messageHistoryIndex = parseInt(message.dataset.historyIndex || '-1', 10);
+            if (Number.isInteger(messageHistoryIndex) && messageHistoryIndex >= assistantHistoryIndex) {
+                message.remove();
+            }
+        });
+
+        this.setLoading(true);
+        this.updateStatus('processing', 'Regenerating...');
+
+        try {
+            const response = await this.callAI();
+            this.conversationHistory.push({
+                role: 'assistant',
+                content: response
+            });
+            this.addMessage('assistant', response, false, this.conversationHistory.length - 1);
+            this.updateStatus('ready', 'Ready');
+        } catch (error) {
+            console.error('Error regenerating response:', error);
+            this.addMessage('error', `Error: ${error.message}. Please check your API configuration.`, true);
+            this.updateStatus('error', 'Error occurred');
+        } finally {
+            this.setLoading(false);
+            this.saveConversation();
+        }
     }
 
     formatTime(date) {
@@ -203,7 +440,11 @@ class ChatApp {
         // Submit on Enter (without Shift)
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            this.chatForm.dispatchEvent(new Event('submit'));
+            if (typeof this.chatForm.requestSubmit === 'function') {
+                this.chatForm.requestSubmit();
+            } else {
+                this.chatForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+            }
         }
     }
 
@@ -222,24 +463,27 @@ class ChatApp {
     }
 
     exportChat() {
-        const messages = this.chatMessages.querySelectorAll('.message');
+        const now = new Date();
         let chatText = 'AI Chat Export\n';
-        chatText += `Date: ${new Date().toLocaleString()}\n`;
+        chatText += `Date: ${now.toLocaleString()}\n`;
         chatText += '=' .repeat(50) + '\n\n';
 
-        messages.forEach(msg => {
-            const type = msg.classList.contains('user') ? 'You' : 'AI Assistant';
-            const content = msg.querySelector('.message-content p').textContent;
-            const time = msg.querySelector('.message-time').textContent;
-            chatText += `[${time}] ${type}:\n${content}\n\n`;
-        });
+        if (this.conversationHistory.length === 0) {
+            chatText += 'No chat history available for this user.\n';
+        } else {
+            this.conversationHistory.forEach((msg, index) => {
+                const sender = msg.role === 'user' ? 'You' : 'AI Assistant';
+                chatText += `${index + 1}. ${sender}:\n${msg.content}\n\n`;
+            });
+        }
 
         // Create and download file
         const blob = new Blob([chatText], { type: 'text/plain' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `chat-export-${Date.now()}.txt`;
+        const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        a.download = `chat-history-${timestamp}.txt`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -261,8 +505,8 @@ class ChatApp {
                 this.conversationHistory = JSON.parse(saved);
                 
                 // Reload messages (skip initial welcome message)
-                this.conversationHistory.forEach(msg => {
-                    this.addMessage(msg.role === 'user' ? 'user' : 'assistant', msg.content);
+                this.conversationHistory.forEach((msg, index) => {
+                    this.addMessage(msg.role === 'user' ? 'user' : 'assistant', msg.content, false, index);
                 });
             }
         } catch (error) {

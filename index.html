@@ -28,6 +28,12 @@
             </div>
 
             <div class="chat-input-container">
+                <div class="prompt-templates" id="promptTemplates">
+                    <button type="button" class="template-button" data-template="Summarize this in bullet points:">Summarize</button>
+                    <button type="button" class="template-button" data-template="Explain this like I'm a beginner:">Explain simply</button>
+                    <button type="button" class="template-button" data-template="Rewrite this to sound more professional:">Rewrite</button>
+                    <button type="button" class="template-button" data-template="Give me step-by-step instructions for:">Step-by-step</button>
+                </div>
                 <form id="chatForm" class="chat-form">
                     <textarea 
                         id="messageInput" 
@@ -51,6 +57,16 @@
         <footer class="chat-footer">
             <button class="action-button" id="clearChat">Clear Chat</button>
             <button class="action-button" id="exportChat">Export Chat</button>
+            <button class="action-button" id="themeToggle">Dark Mode</button>
+            <div class="font-size-control">
+                <label for="fontSizeSelect">Font Size</label>
+                <select id="fontSizeSelect" class="font-size-select">
+                    <option value="small">Small</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="large">Large</option>
+                </select>
+                <span id="fontSizeActive" class="font-size-active">Medium</span>
+            </div>
         </footer>
     </div>
 

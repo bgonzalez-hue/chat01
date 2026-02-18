@@ -2,12 +2,36 @@
 
 A modern AI chat application using Google Gemini API with a beautiful, responsive interface.
 
+## What's New
+
+### 2026-02-18
+- Added active visual indicators for selected controls:
+	- Last-used prompt template stays highlighted
+	- Current font size is shown with an inline active badge
+- Updated README documentation to reflect all recent UI and UX updates
+
+### 2026-02-17
+- Added keyboard send enhancement: press `Enter` to send (`Shift+Enter` for new line)
+- Added message actions:
+	- `Copy` for user and assistant messages
+	- `Edit` for user messages
+	- `Regenerate` for assistant messages
+- Added inline copy button feedback (`Copied!` / `Failed`)
+- Added prompt templates (Summarize, Explain simply, Rewrite, Step-by-step)
+- Added theme toggle (Light/Dark) with localStorage persistence
+- Added font size control (Small/Medium/Large) with localStorage persistence
+- Improved export to generate a user chat history `.txt` file with date-based filename
+
 ## Features
 
 - 🤖 AI-powered chat using Google Gemini 2.5 Flash
 - 🎨 Modern, responsive UI design with gradient styling
 - 💾 Conversation history (localStorage)
-- 📤 Export chat functionality to text file
+- 🧩 Prompt templates for faster message composition
+- 🌓 Theme toggle with saved preference (Light/Dark)
+- 🔤 Font size control with saved preference (Small/Medium/Large)
+- ⚡ Message actions: Copy, Edit (user), Regenerate (assistant)
+- 📤 Export chat history to `.txt` (from current user session)
 - 🔄 Clear chat option
 - ⚡ Real-time status indicators
 - 📱 Mobile-friendly responsive design
@@ -94,10 +118,23 @@ You can switch models by changing the API_ENDPOINT in config.js:
 - Character counter (2000 character limit)
 - Send on Enter key (Shift+Enter for new line)
 - Smooth scrolling and animations
+- Prompt template chips (Summarize, Explain simply, Rewrite, Step-by-step)
+
+### Message Actions
+- **Copy**: Available on user and assistant messages
+- **Edit**: Available on user messages to quickly resend modified prompts
+- **Regenerate**: Available on assistant messages to generate a fresh response
+- Inline copy feedback (`Copied!` / `Failed`) on the action button
+
+### Personalization
+- **Theme Toggle**: Switch between Light and Dark mode
+- **Font Size Control**: Select Small, Medium, or Large
+- Preferences are saved automatically in browser localStorage
+- Active UI indicators show the last selected template and current font size
 
 ### Conversation Management
 - **Clear Chat**: Removes all messages except the welcome message
-- **Export Chat**: Downloads conversation as a .txt file with timestamps
+- **Export Chat**: Downloads conversation as a `.txt` file with a date-based filename
 - **Auto-save**: Conversation persists in browser localStorage
 
 ### Error Handling

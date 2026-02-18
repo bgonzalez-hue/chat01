@@ -14,6 +14,17 @@
     --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.15);
     --border-radius: 8px;
     --transition: all 0.3s ease;
+    --chat-font-size: 1rem;
+}
+
+body[data-theme="dark"] {
+    --background-color: #1f2937;
+    --surface-color: #111827;
+    --text-primary: #f3f4f6;
+    --text-secondary: #9ca3af;
+    --border-color: #374151;
+    --shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+    --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.45);
 }
 
 /* Global Styles */
@@ -168,6 +179,56 @@ body {
 .message-content p {
     line-height: 1.5;
     margin: 0;
+    font-size: var(--chat-font-size);
+}
+
+.message-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 6px;
+    opacity: 0;
+    pointer-events: none;
+    transition: var(--transition);
+}
+
+.message:hover .message-actions,
+.message:focus-within .message-actions {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.message.user .message-actions {
+    justify-content: flex-end;
+}
+
+.message.assistant .message-actions {
+    justify-content: flex-start;
+}
+
+.message-action-btn {
+    border: 1px solid var(--border-color);
+    background: var(--surface-color);
+    color: var(--text-secondary);
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.message-action-btn:hover {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.message-action-btn.is-success {
+    color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.message-action-btn.is-error {
+    color: var(--danger-color);
+    border-color: var(--danger-color);
 }
 
 .message-time {
@@ -195,6 +256,35 @@ body {
     background: var(--surface-color);
 }
 
+.prompt-templates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.template-button {
+    border: 1px solid var(--border-color);
+    background: var(--background-color);
+    color: var(--text-primary);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.template-button:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.template-button.is-active {
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    color: white;
+}
+
 .chat-form {
     display: flex;
     gap: 12px;
@@ -207,10 +297,12 @@ body {
     border: 2px solid var(--border-color);
     border-radius: var(--border-radius);
     font-family: inherit;
-    font-size: 1rem;
+    font-size: var(--chat-font-size);
     resize: none;
     max-height: 150px;
     transition: var(--transition);
+    color: var(--text-primary);
+    background: var(--surface-color);
 }
 
 .message-input:focus {
@@ -271,6 +363,7 @@ body {
     display: flex;
     gap: 12px;
     justify-content: center;
+    flex-wrap: wrap;
 }
 
 .action-button {
@@ -288,6 +381,40 @@ body {
     background: var(--primary-color);
     color: white;
     border-color: var(--primary-color);
+}
+
+.font-size-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.font-size-select {
+    border: 1px solid var(--border-color);
+    background: var(--surface-color);
+    color: var(--text-primary);
+    border-radius: var(--border-radius);
+    padding: 8px 10px;
+    font-size: 0.9rem;
+}
+
+.font-size-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.font-size-active {
+    border: 1px solid var(--primary-color);
+    background: var(--primary-color);
+    color: white;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    min-width: 62px;
+    text-align: center;
 }
 
 /* Loading Overlay */
@@ -351,9 +478,19 @@ body {
         padding: 15px;
     }
 
+    .prompt-templates {
+        margin-bottom: 10px;
+    }
+
     .action-button {
         padding: 8px 16px;
         font-size: 0.85rem;
+    }
+
+    .message-actions {
+        opacity: 1;
+        pointer-events: auto;
+        flex-wrap: wrap;
     }
 }
 
@@ -372,5 +509,10 @@ body {
 
     .action-button {
         width: 100%;
+    }
+
+    .font-size-control {
+        width: 100%;
+        justify-content: space-between;
     }
 }
