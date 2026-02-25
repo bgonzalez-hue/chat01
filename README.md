@@ -75,6 +75,90 @@ Simply open `index.html` in your web browser. No server required!
 
 The app will show a "Ready" status with a green indicator when configured correctly. Type your message and press Enter or click Send.
 
+## Testing (Jest)
+
+This project now includes Jest for unit testing.
+
+### Prerequisite
+
+Install Node.js (which includes `npm`) from https://nodejs.org/
+
+### Install dependencies
+
+```bash
+npm install
+```
+
+### Run tests
+
+```bash
+npm test
+```
+
+If PowerShell blocks `npm` scripts on your machine, use:
+
+```bash
+npm.cmd test
+```
+
+### Watch mode
+
+```bash
+npm run test:watch
+```
+
+### How to add new Jest tests
+
+1. Create or update a test file inside `__tests__/` using the `.test.js` suffix (example: `feature-name.test.js`).
+2. Import the class or function you want to test (for app behavior, this project imports `ChatApp` from `script.js`).
+3. Build a minimal DOM fixture in the test before each case (using `document.body.innerHTML`) so the app can find required elements.
+4. Set any required globals/mocks (for example `global.CONFIG`, `localStorage`, `fetch`, or clipboard APIs).
+5. Instantiate the app and execute one behavior per test.
+6. Assert expected state changes using Jest expectations (`expect(...)`) for DOM values, storage values, and method outputs.
+7. Run tests with `npm test` (or `npm.cmd test` on PowerShell if needed).
+
+## Test Results (2026-02-25)
+
+Jest was executed successfully and all tests passed.
+
+- **Suite:** `__tests__/chatapp.test.js`
+- **Result:** 1 suite passed, 6 tests passed, 0 failed
+
+### What was tested and why it passed
+
+1. **Theme application (`applyTheme`)**
+	- Verifies that selecting `dark` sets `document.body.dataset.theme` to `dark`.
+	- Verifies the toggle button label changes to `Light Mode`.
+	- Verifies the preference is persisted in `localStorage` under `chatTheme`.
+	- **Why it passed:** `applyTheme` updates all three values exactly as expected.
+
+2. **Font size fallback (`applyFontSize`)**
+	- Verifies invalid input falls back to `medium`.
+	- Verifies the select control reflects `medium`.
+	- Verifies the active badge text becomes `Medium`.
+	- Verifies persistence in `localStorage` under `chatFontSize`.
+	- **Why it passed:** `applyFontSize` guards unsupported values and applies the default `medium` state.
+
+3. **Prompt template insertion (`handleTemplateClick`)**
+	- Verifies clicking a template appends it to existing textarea content on a new line.
+	- Verifies the clicked template button receives the `is-active` class.
+	- Verifies the selected template is saved in `localStorage` under `chatLastTemplate`.
+	- **Why it passed:** `handleTemplateClick` appends text, stores the template, and calls active-state logic correctly.
+
+4. **API key validation error path (`checkAPIConfiguration`)**
+	- Verifies missing/placeholder API key sets status text to `API key not configured`.
+	- Verifies a warning message is rendered in the chat area.
+	- **Why it passed:** `checkAPIConfiguration` explicitly routes invalid keys to error status and warning output.
+
+5. **Template active-state exclusivity (`applyTemplateActiveState`)**
+	- Verifies selecting one template marks it active and unmarks the other templates.
+	- **Why it passed:** `applyTemplateActiveState` toggles `is-active` based on an exact template match.
+
+6. **Template click guard clause (`handleTemplateClick`)**
+	- Verifies clicks outside `.template-button` are ignored.
+	- Verifies message input and saved template value are unchanged.
+	- **Why it passed:** `handleTemplateClick` returns early when no valid template button is detected.
+
 ## How It Works
 
 - **Frontend-only application**: Pure HTML, CSS, and JavaScript

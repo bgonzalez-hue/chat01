@@ -515,7 +515,12 @@ class ChatApp {
     }
 }
 
-// Initialize the chat app when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    new ChatApp();
-});
+if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', () => {
+        new ChatApp();
+    });
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { ChatApp };
+}
