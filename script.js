@@ -45,7 +45,7 @@ class ChatApp {
         // Load conversation from localStorage
         this.loadConversation();
         
-        // Check API configuration
+        // Check API configuration (no intrusive prompt)
         this.checkAPIConfiguration();
     }
 
@@ -119,7 +119,107 @@ class ChatApp {
     }
 
     checkAPIConfiguration() {
-        this.updateStatus('ready', 'Ready');
+        const apiKey = getAPIKey();
+        if (!apiKey) {
+            this.updateStatus('error', 'API key not configured');
+            this.addMessage('assistant', 
+                'Welcome to AI Chat! 🤖\n\n' +
+                'To get started, you need to configure your Google Gemini API key.\n\n' +
+                '📋 Setup Options:\n\n' +
+                '1️⃣ LOCAL FILE (Recommended for developers):\n' +
+                '   • Copy config.local.example.js to config.local.js\n' +
+                '   • Add your API key in config.local.js\n' +
+                '   • This file won\'t be uploaded to GitHub\n\n' +
+                '2️⃣ BROWSER STORAGE (Quick setup):\n' +
+                '   • Click "Configure API Key" button below\n' +
+                '   • Enter your API key in the prompt\n' +
+                '   • Key is stored in your browser only\n\n' +
+                '🔑 Get a FREE API key:\n' +
+                '   Visit: https://aistudio.google.com/app/apikey\n\n' +
+                'Refresh the page after adding your key!', 
+                false
+            );
+            this.showAPIKeyButton();
+        } else {
+            this.updateStatus('ready', 'Ready');
+            this.hideAPIKeyButton();
+        }
+    }
+
+    promptForAPIKey() {
+        const apiKey = getAPIKey();
+        
+        if (!apiKey) {
+            const welcomeMessage = 
+                'Welcome to AI Chat!\n\n' +
+                'To get started, you need a Google Gemini API key.\n\n' +
+                'How to get your FREE API key:\n' +
+                '1. Visit: https://aistudio.google.com/app/apikey\n' +
+                '2. Sign in with your Google account\n' +
+                '3. Click "Create API Key"\n' +
+                '4. Copy and paste it below\n\n' +
+                'Your API key will be stored locally in your browser only.\n' +
+                'It will never be uploaded to any repository.';
+            
+            const userApiKey = prompt(welcomeMessage);
+            
+            if (userApiKey && userApiKey.trim()) {
+                setAPIKey(userApiKey.trim());
+                this.updateStatus('ready', 'API key configured');
+                this.addMessage('assistant', 'API key successfully configured! You can start chatting now.');
+                this.checkAPIConfiguration();
+            } else {
+                this.updateStatus('error', 'No API key provided');
+                this.addMessage('error', 'No API key provided. Click "Configure API Key" button to add one.', true);
+                this.showAPIKeyButton();
+            }
+        }
+    }
+
+    showAPIKeyButton() {
+        if (!document.getElementById('configureAPIBtn')) {
+            const button = document.createElement('button');
+            button.id = 'configureAPIBtn';
+            button.className = 'action-button';
+            button.textContent = 'Configure API Key';
+            button.style.background = 'linear-gradient(135deg, #007bff, #0056b3)';
+            button.style.color = 'white';
+            button.style.fontWeight = '600';
+            button.addEventListener('click', () => this.reconfigureAPIKey());
+            this.clearChatBtn.parentElement.insertBefore(button, this.clearChatBtn);
+        }
+    }
+
+    hideAPIKeyButton() {
+        const btn = document.getElementById('configureAPIBtn');
+        if (btn) btn.remove();
+    }
+
+    reconfigureAPIKey() {
+        const currentKey = getAPIKey() || '';
+        const maskedKey = currentKey ? currentKey.substring(0, 10) + '...' + currentKey.substring(currentKey.length - 4) : 'None';
+        
+        const message = 
+            'Enter your Google Gemini API key:\n\n' +
+            'Get a FREE key at: https://aistudio.google.com/app/apikey\n\n' +
+            `Current key: ${maskedKey}`;
+        
+        const apiKey = prompt(message, '');
+        
+        if (apiKey && apiKey.trim() && apiKey !== currentKey) {
+            setAPIKey(apiKey.trim());
+            this.updateStatus('ready', 'API key updated');
+            this.addMessage('assistant', 'API key successfully updated! You can start chatting now.');
+            this.checkAPIConfiguration();
+        } else if (apiKey === '') {
+            const confirmClear = confirm('Do you want to clear the stored API key?');
+            if (confirmClear) {
+                clearAPIKey();
+                this.updateStatus('error', 'API key cleared');
+                this.addMessage('error', 'API key has been cleared. Please configure a new one.', true);
+                this.checkAPIConfiguration();
+            }
+        }
     }
 
     updateStatus(status, text) {
@@ -160,8 +260,10 @@ class ChatApp {
             this.updateStatus('ready', 'Ready');
         } catch (error) {
             console.error('Error:', error);
-            this.addMessage('error', `Error: ${error.message}. Please check your server configuration.`, true);
+            this.conversationHistory.pop(); // Remove failed user message
+            this.addMessage('error', `Error: ${error.message}. Please check your API key configuration.`, true);
             this.updateStatus('error', 'Error occurred');
+            this.showAPIKeyButton();
         } finally {
             this.setLoading(false);
         }
@@ -171,11 +273,14 @@ class ChatApp {
     }
 
     async callAI() {
+        const apiKey = getAPIKey();
+        
+        if (!apiKey) {
+            throw new Error('API key not configured. Please configure your API key.');
+        }
+
         try {
-            const config = typeof CONFIG !== 'undefined' ? CONFIG : {};
-            const apiEndpoint = config.API_ENDPOINT || '/api/chat';
-            const temperature = typeof config.TEMPERATURE === 'number' ? config.TEMPERATURE : 0.7;
-            const maxTokens = typeof config.MAX_TOKENS === 'number' ? config.MAX_TOKENS : 1000;
+            const url = `${CONFIG.API_ENDPOINT}?key=${apiKey}`;
             
             // Convert conversation history to Gemini format
             const contents = [];
@@ -186,7 +291,7 @@ class ChatApp {
                 });
             }
 
-            const response = await fetch(apiEndpoint, {
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -194,8 +299,8 @@ class ChatApp {
                 body: JSON.stringify({
                     contents: contents,
                     generationConfig: {
-                        temperature,
-                        maxOutputTokens: maxTokens
+                        temperature: CONFIG.TEMPERATURE,
+                        maxOutputTokens: CONFIG.MAX_TOKENS
                     }
                 })
             });
@@ -206,7 +311,9 @@ class ChatApp {
             }
 
             const data = await response.json();
-            return data.text;
+            const assistantMessage = data.candidates[0].content.parts[0].text;
+            
+            return assistantMessage;
         } catch (error) {
             throw error;
         }

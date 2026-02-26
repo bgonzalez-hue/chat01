@@ -3,6 +3,9 @@
 .env.local
 .env.production
 
+# Local configuration (contains API keys)
+config.local.js
+
 # Dependencies
 node_modules/
 package-lock.json
