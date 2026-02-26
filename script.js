@@ -45,7 +45,10 @@ class ChatApp {
         // Load conversation from localStorage
         this.loadConversation();
         
-        // Check API configuration (no intrusive prompt)
+        // Prompt for API key if not set
+        this.promptForAPIKey();
+        
+        // Check API configuration
         this.checkAPIConfiguration();
     }
 
@@ -122,23 +125,6 @@ class ChatApp {
         const apiKey = getAPIKey();
         if (!apiKey) {
             this.updateStatus('error', 'API key not configured');
-            this.addMessage('assistant', 
-                'Welcome to AI Chat! 🤖\n\n' +
-                'To get started, you need to configure your Google Gemini API key.\n\n' +
-                '📋 Setup Options:\n\n' +
-                '1️⃣ LOCAL FILE (Recommended for developers):\n' +
-                '   • Copy config.local.example.js to config.local.js\n' +
-                '   • Add your API key in config.local.js\n' +
-                '   • This file won\'t be uploaded to GitHub\n\n' +
-                '2️⃣ BROWSER STORAGE (Quick setup):\n' +
-                '   • Click "Configure API Key" button below\n' +
-                '   • Enter your API key in the prompt\n' +
-                '   • Key is stored in your browser only\n\n' +
-                '🔑 Get a FREE API key:\n' +
-                '   Visit: https://aistudio.google.com/app/apikey\n\n' +
-                'Refresh the page after adding your key!', 
-                false
-            );
             this.showAPIKeyButton();
         } else {
             this.updateStatus('ready', 'Ready');
@@ -152,27 +138,23 @@ class ChatApp {
         if (!apiKey) {
             const welcomeMessage = 
                 'Welcome to AI Chat!\n\n' +
-                'To get started, you need a Google Gemini API key.\n\n' +
-                'How to get your FREE API key:\n' +
-                '1. Visit: https://aistudio.google.com/app/apikey\n' +
-                '2. Sign in with your Google account\n' +
-                '3. Click "Create API Key"\n' +
-                '4. Copy and paste it below\n\n' +
-                'Your API key will be stored locally in your browser only.\n' +
-                'It will never be uploaded to any repository.';
+                'Please enter your Google Gemini API key to get started.\n\n' +
+                'Get your FREE API key at:\nhttps://aistudio.google.com/app/apikey';
             
             const userApiKey = prompt(welcomeMessage);
             
             if (userApiKey && userApiKey.trim()) {
                 setAPIKey(userApiKey.trim());
                 this.updateStatus('ready', 'API key configured');
-                this.addMessage('assistant', 'API key successfully configured! You can start chatting now.');
+                this.addMessage('assistant', 'Hello, how can I help you today?');
                 this.checkAPIConfiguration();
             } else {
                 this.updateStatus('error', 'No API key provided');
                 this.addMessage('error', 'No API key provided. Click "Configure API Key" button to add one.', true);
                 this.showAPIKeyButton();
             }
+        } else {
+            this.addMessage('assistant', 'Hello, how can I help you today?');
         }
     }
 

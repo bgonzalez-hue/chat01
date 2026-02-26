@@ -4,16 +4,7 @@ A modern AI chat application using Google Gemini API with a beautiful, responsiv
 
 ## What's New
 
-### 2026-02-26 (Latest)
-- **🔒 Enhanced Security**: Improved API key management system
-  - API keys stored in `config.local.js` (never uploaded to GitHub)
-  - Removed intrusive startup prompt for better UX
-  - Added `config.local.example.js` template for easy setup
-  - Users can clone and set up their own keys without prompts
-  - Supports both local file and browser storage methods
-  - Clear setup instructions shown in welcome message
-
-### 2026-02-26 (Earlier)
+### 2026-02-26
 - **🔒 Secure API Key Prompt**: Added startup prompt for API key entry
   - No need to store API key in files
   - Key stored only in browser's localStorage
@@ -59,68 +50,20 @@ A modern AI chat application using Google Gemini API with a beautiful, responsiv
 
 ### Quick Start (Recommended)
 
-**Option 1: Local Configuration File (Best for developers)**
-
-1. **Get a FREE Google Gemini API key**:
-   - Visit: https://aistudio.google.com/app/apikey
+1. **Open the application**: Simply open `index.html` in your web browser
+2. **Enter API Key**: A prompt will appear asking for your Google Gemini API key
+3. **Get your FREE API key**:
+   - Visit https://aistudio.google.com/app/apikey
    - Sign in with your Google account
    - Click "Create API Key"
-   - Copy the generated API key
+   - Copy and paste it into the prompt
+4. **Start chatting**: Your API key is stored only in your browser's localStorage
 
-2. **Set up local configuration**:
-   ```bash
-   # Copy the example file
-   copy config.local.example.js config.local.js
-   
-   # Or on Mac/Linux:
-   cp config.local.example.js config.local.js
-   ```
-
-3. **Add your API key**:
-   - Open `config.local.js` in any text editor
-   - Replace `'your-google-gemini-api-key-here'` with your actual API key
-   - Save the file
-
-4. **Start using**:
-   - Open `index.html` in your web browser
-   - Start chatting immediately!
-
-**Why this method?**
-- ✅ API key stays in `config.local.js` (never uploaded to GitHub)
-- ✅ No prompts or popups
-- ✅ Safe for team environments
-- ✅ Easy to update or rotate keys
-- ✅ Works offline after setup
-
----
-
-**Option 2: Browser Storage (Quick for personal use)**
-
-1. **Open the app**: Open `index.html` in your browser
-2. **Click "Configure API Key"** button in the footer
-3. **Get your key**: Visit https://aistudio.google.com/app/apikey
-4. **Enter your key**: Paste it in the prompt
-5. **Start chatting**: Key is saved in browser localStorage
-
-**Why this method?**
-- ✅ Quick setup (no file editing)
-- ✅ Works on any device
-- ✅ Key stored only in your browser
-
----
-
-### For Users Cloning from GitHub
-
-When you clone this repository:
-
-1. The `config.local.js` file won't exist (it's in `.gitignore`)
-2. You'll see a welcome message with setup instructions
-3. Follow either setup option above
-4. Refresh the page after configuration
-
-**Files you'll see:**
-- ✅ `config.local.example.js` - Template to copy
-- ❌ `config.local.js` - You need to create this with your key
+**Security Benefits:**
+- ✅ API key never stored in files
+- ✅ Safe to commit all code to Git
+- ✅ No risk of accidentally sharing your key
+- ✅ Easy to update or clear using "Configure API Key" button
 
 ---
 
@@ -153,64 +96,30 @@ The app will show a "Ready" status with a green indicator when configured correc
 
 ## Managing Your API Key
 
-### Where is my API key stored?
+### View or Update Your Key
 
-**Method 1: Local File (`config.local.js`)**
-- Stored in `config.local.js` file (ignored by Git)
-- Never uploaded to GitHub or any repository
-- Persists across browser sessions and devices
-- Edit the file directly to update
+Click the **"Configure API Key"** button in the footer to:
+- View your current key (partially masked for security)
+- Update to a new API key
+- Clear the stored key
 
-**Method 2: Browser Storage**
-- Stored in browser's localStorage under `gemini_api_key`
-- Only exists in your specific browser
-- Never leaves your device except to call Google's API
-- Manage via "Configure API Key" button
+### Where is my key stored?
 
-### Update or Change Your Key
+Your API key is stored in your browser's localStorage under the key `gemini_api_key`. It never leaves your browser and is not sent to any server except Google's Gemini API.
 
-**For local file method:**
-1. Open `config.local.js` in a text editor
-2. Replace the API key value
-3. Save and refresh the browser
+### Clear your key
 
-**For browser storage method:**
-1. Click "Configure API Key" button
-2. Enter new API key in the prompt
-3. Key is automatically updated
-
-### Clear Your Key
-
-**Local file method:**
-- Delete or edit `config.local.js` file
-
-**Browser storage method:**
-- Click "Configure API Key" → Enter empty value, OR
-- Open DevTools Console → Run: `localStorage.removeItem('gemini_api_key')`
-
-### Which Method Should I Use?
-
-**Use Local File (`config.local.js`) if you:**
-- Are a developer working with version control
-- Want persistent setup across browsers/devices
-- Prefer file-based configuration
-- Work in a team environment
-
-**Use Browser Storage if you:**
-- Want quick, no-file-edit setup
-- Use a single browser/device
-- Prefer UI-based configuration
-- Are testing or doing personal projects
+You can clear your API key by:
+1. Clicking "Configure API Key" and entering an empty value, or
+2. Opening browser DevTools Console and running: `localStorage.removeItem('gemini_api_key')`
 
 ### Security Best Practices
 
-- ✅ Never commit `config.local.js` to Git (already in `.gitignore`)
 - ✅ Never share your API key with anyone
 - ✅ Don't paste your API key in public forums or chats
 - ✅ If you accidentally expose your key, regenerate it at https://aistudio.google.com/app/apikey
 - ✅ Use different API keys for different projects
 - ✅ Monitor your usage at https://aistudio.google.com/
-- ✅ Verify `config.local.js` is listed in `.gitignore`
 
 ## Testing (Jest)
 
