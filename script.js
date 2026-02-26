@@ -146,15 +146,12 @@ class ChatApp {
             if (userApiKey && userApiKey.trim()) {
                 setAPIKey(userApiKey.trim());
                 this.updateStatus('ready', 'API key configured');
-                this.addMessage('assistant', 'Hello, how can I help you today?');
                 this.checkAPIConfiguration();
             } else {
                 this.updateStatus('error', 'No API key provided');
                 this.addMessage('error', 'No API key provided. Click "Configure API Key" button to add one.', true);
                 this.showAPIKeyButton();
             }
-        } else {
-            this.addMessage('assistant', 'Hello, how can I help you today?');
         }
     }
 
