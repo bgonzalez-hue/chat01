@@ -1,13 +1,6 @@
 const CONFIG = {
-    // API key priority: 1) LOCAL_CONFIG.API_KEY (from config.local.js file)
-    //                   2) localStorage (browser storage)
-    //                   3) Empty string (will show setup instructions)
+    // API key will be requested on startup and stored in localStorage
     get API_KEY() {
-        // Try to get from config.local.js first (not tracked by git)
-        if (typeof LOCAL_CONFIG !== 'undefined' && LOCAL_CONFIG.API_KEY && LOCAL_CONFIG.API_KEY !== 'your-google-gemini-api-key-here') {
-            return LOCAL_CONFIG.API_KEY;
-        }
-        // Fall back to localStorage
         return localStorage.getItem('gemini_api_key') || '';
     },
     set API_KEY(value) {
@@ -27,11 +20,6 @@ function setAPIKey(key) {
 }
 
 function getAPIKey() {
-    // Try config.local.js first
-    if (typeof LOCAL_CONFIG !== 'undefined' && LOCAL_CONFIG.API_KEY && LOCAL_CONFIG.API_KEY !== 'your-google-gemini-api-key-here') {
-        return LOCAL_CONFIG.API_KEY;
-    }
-    // Fall back to localStorage
     return localStorage.getItem('gemini_api_key') || '';
 }
 
