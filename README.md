@@ -35,7 +35,7 @@ A modern AI chat application using Google Gemini API with a beautiful, responsiv
 - 🔄 Clear chat option
 - ⚡ Real-time status indicators
 - 📱 Mobile-friendly responsive design
-- 🚀 Fast and lightweight (no backend required)
+- 🚀 Fast and lightweight (secure backend proxy)
 
 ## Setup Instructions
 
@@ -48,28 +48,24 @@ A modern AI chat application using Google Gemini API with a beautiful, responsiv
 
 ### 2. Configure the API Key
 
-Open `config.js` and replace the API_KEY value with your key:
-
-```javascript
-API_KEY: 'your-api-key-here'
-```
-
-Alternatively, you can also update the `.env` file (for reference):
+Create a `.env` file in the project root (or copy `.env.example`) and add your key:
 
 ```
 API_KEY=your-api-key-here
-API_ENDPOINT=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
 MODEL=gemini-2.5-flash
+PORT=3000
 ```
 
 ### 3. Run the Application
 
-Simply open `index.html` in your web browser. No server required!
+Install dependencies, then run the local server:
 
-**Or** use a local server:
-- Python: `python -m http.server 8000`
-- VS Code: Use Live Server extension
-- Any other local web server
+```bash
+npm install
+npm start
+```
+
+Open http://localhost:3000 in your browser.
 
 ### 4. Start Chatting
 
@@ -145,10 +141,9 @@ Jest was executed successfully and all tests passed.
 	- Verifies the selected template is saved in `localStorage` under `chatLastTemplate`.
 	- **Why it passed:** `handleTemplateClick` appends text, stores the template, and calls active-state logic correctly.
 
-4. **API key validation error path (`checkAPIConfiguration`)**
-	- Verifies missing/placeholder API key sets status text to `API key not configured`.
-	- Verifies a warning message is rendered in the chat area.
-	- **Why it passed:** `checkAPIConfiguration` explicitly routes invalid keys to error status and warning output.
+4. **Proxy configuration ready path (`checkAPIConfiguration`)**
+	- Verifies status text is set to `Ready` for the backend-proxy flow.
+	- **Why it passed:** `checkAPIConfiguration` now validates client readiness without exposing API keys.
 
 5. **Template active-state exclusivity (`applyTemplateActiveState`)**
 	- Verifies selecting one template marks it active and unmarks the other templates.
@@ -161,8 +156,8 @@ Jest was executed successfully and all tests passed.
 
 ## How It Works
 
-- **Frontend-only application**: Pure HTML, CSS, and JavaScript
-- **Google Gemini API**: Directly calls Google's AI API for responses
+- **Frontend + backend proxy**: Browser sends prompts to a local Node/Express server
+- **Google Gemini API**: Server calls Gemini using API key stored only in `.env`
 - **localStorage**: Saves conversation history locally in your browser
 - **Responsive Design**: Works on desktop, tablet, and mobile devices
 
@@ -173,8 +168,10 @@ chat01/
 ├── index.html          # Main HTML file
 ├── styles.css          # Styling and animations
 ├── script.js           # Frontend logic and API integration
-├── config.js           # Configuration (API key, endpoint)
-├── .env                # Environment variables reference
+├── config.js           # Frontend-safe configuration
+├── server.js           # Backend proxy for Gemini API
+├── .env.example        # Environment variable template
+├── .env                # Local secrets (ignored by git)
 ├── .gitignore          # Git ignore rules (protects API keys)
 └── README.md           # This file
 ```
@@ -188,7 +185,7 @@ chat01/
 
 ## Available Gemini Models
 
-You can switch models by changing the API_ENDPOINT in config.js:
+You can switch models by changing `MODEL` in `.env`:
 
 - **gemini-2.5-flash** (Recommended) - Fast and efficient
 - **gemini-2.5-pro** - More powerful, better quality
@@ -222,7 +219,7 @@ You can switch models by changing the API_ENDPOINT in config.js:
 - **Auto-save**: Conversation persists in browser localStorage
 
 ### Error Handling
-- API key validation
+- Backend configuration validation
 - Network error detection
 - Rate limit handling
 - User-friendly error messages
@@ -230,8 +227,8 @@ You can switch models by changing the API_ENDPOINT in config.js:
 ## Troubleshooting
 
 **"API key not configured" warning:**
-- Make sure you've updated the API_KEY in `config.js`
-- The key should not be 'your-api-key-here'
+- Make sure `.env` exists and contains `API_KEY`
+- Restart the server after updating `.env`
 
 **API errors after adding key:**
 - Verify your API key is valid at https://aistudio.google.com/app/apikey
@@ -250,10 +247,10 @@ You can switch models by changing the API_ENDPOINT in config.js:
 
 ## Security Notes
 
-- ⚠️ **Never commit `.env` or `config.js` with real API keys to public repositories**
+- ⚠️ **Never commit `.env` with real API keys to public repositories**
 - The `.gitignore` file is configured to protect sensitive files
-- For production apps, use a backend server to secure API keys
-- Current setup is suitable for personal use and development
+- API calls now go through `server.js`, so the key is not exposed in the browser
+- Rotate leaked keys immediately and replace with a new key
 
 ## Browser Compatibility
 
@@ -268,5 +265,5 @@ ISC
 
 ---
 
-**Note**: This is a client-side application that directly calls the Google Gemini API. For production use, consider implementing a backend proxy to keep your API key secure.
+**Note**: This app uses a backend proxy so your Gemini API key stays on the server side.
 

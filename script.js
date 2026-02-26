@@ -119,12 +119,7 @@ class ChatApp {
     }
 
     checkAPIConfiguration() {
-        if (!CONFIG.API_KEY || CONFIG.API_KEY === 'your-api-key-here') {
-            this.updateStatus('error', 'API key not configured');
-            this.addMessage('assistant', 'Warning: Please configure your API key in the .env file to use the AI chat functionality.', true);
-        } else {
-            this.updateStatus('ready', 'Ready');
-        }
+        this.updateStatus('ready', 'Ready');
     }
 
     updateStatus(status, text) {
@@ -165,7 +160,7 @@ class ChatApp {
             this.updateStatus('ready', 'Ready');
         } catch (error) {
             console.error('Error:', error);
-            this.addMessage('error', `Error: ${error.message}. Please check your API configuration.`, true);
+            this.addMessage('error', `Error: ${error.message}. Please check your server configuration.`, true);
             this.updateStatus('error', 'Error occurred');
         } finally {
             this.setLoading(false);
@@ -176,14 +171,11 @@ class ChatApp {
     }
 
     async callAI() {
-        // Check API configuration
-        if (!CONFIG.API_KEY || CONFIG.API_KEY === 'your-api-key-here') {
-            throw new Error('API key not configured. Please add your API key to the .env file.');
-        }
-
         try {
-            // Using Google Gemini API
-            const url = `${CONFIG.API_ENDPOINT}?key=${CONFIG.API_KEY}`;
+            const config = typeof CONFIG !== 'undefined' ? CONFIG : {};
+            const apiEndpoint = config.API_ENDPOINT || '/api/chat';
+            const temperature = typeof config.TEMPERATURE === 'number' ? config.TEMPERATURE : 0.7;
+            const maxTokens = typeof config.MAX_TOKENS === 'number' ? config.MAX_TOKENS : 1000;
             
             // Convert conversation history to Gemini format
             const contents = [];
@@ -194,7 +186,7 @@ class ChatApp {
                 });
             }
 
-            const response = await fetch(url, {
+            const response = await fetch(apiEndpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -202,8 +194,8 @@ class ChatApp {
                 body: JSON.stringify({
                     contents: contents,
                     generationConfig: {
-                        temperature: CONFIG.TEMPERATURE,
-                        maxOutputTokens: CONFIG.MAX_TOKENS
+                        temperature,
+                        maxOutputTokens: maxTokens
                     }
                 })
             });
@@ -214,7 +206,7 @@ class ChatApp {
             }
 
             const data = await response.json();
-            return data.candidates[0].content.parts[0].text;
+            return data.text;
         } catch (error) {
             throw error;
         }
@@ -395,7 +387,7 @@ class ChatApp {
             this.updateStatus('ready', 'Ready');
         } catch (error) {
             console.error('Error regenerating response:', error);
-            this.addMessage('error', `Error: ${error.message}. Please check your API configuration.`, true);
+            this.addMessage('error', `Error: ${error.message}. Please check your server configuration.`, true);
             this.updateStatus('error', 'Error occurred');
         } finally {
             this.setLoading(false);

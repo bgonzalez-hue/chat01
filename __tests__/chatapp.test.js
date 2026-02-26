@@ -68,14 +68,10 @@ describe('ChatApp', () => {
         expect(localStorage.getItem('chatLastTemplate')).toBe('Template B');
     });
 
-    test('checkAPIConfiguration shows error status and warning when API key is missing', () => {
-        global.CONFIG.API_KEY = 'your-api-key-here';
-
+    test('checkAPIConfiguration sets ready status for proxy-based configuration', () => {
         app.checkAPIConfiguration();
 
-        expect(document.getElementById('statusText').textContent).toBe('API key not configured');
-        expect(document.getElementById('chatMessages').textContent).toContain('Warning: Please configure your API key');
-        expect(document.querySelectorAll('#chatMessages .message.error').length).toBe(1);
+        expect(document.getElementById('statusText').textContent).toBe('Ready');
     });
 
     test('applyTemplateActiveState activates only selected template', () => {
